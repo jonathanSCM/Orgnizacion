@@ -1,0 +1,185 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  LEAD
+  MEMBER
+}
+
+enum TaskType {
+  CAMBIO_NECESARIO
+  CAMBIO_A_REALIZAR
+  CAMBIO_REALIZADO
+  CAMBIO_PENDIENTE
+}
+
+enum DocumentType {
+  RESUMEN_PROYECTO
+  ACTA_REUNION
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(MEMBER)
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+  createdAt    DateTime @default(now())
+
+  projects       Project[]      @relation("ProjectOwner")
+  assignedProjects Project[]    @relation("ProjectAssignee")
+  assignedTasks  Task[]         @relation("TaskAssignee")
+  historyEntries HistoryEntry[]
+  invitationsSent Invitation[]  @relation("InvitedBy")
+  passwordResetTokens PasswordResetToken[]
+}
+
+model Invitation {
+  id         String    @id @default(cuid())
+  name       String
+  email      String
+  role       Role      @default(MEMBER)
+  token      String    @unique
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  invitedById String
+  invitedBy   User   @relation("InvitedBy", fields: [invitedById], references: [id])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model StatusOption {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  color     String   @default("#64748b")
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  projects Project[]
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String   @default("")
+  repoUrl     String?
+  deployUrl   String?
+  language    String?
+  stack       String   @default("[]") // JSON string array
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  statusId        String
+  status          StatusOption @relation(fields: [statusId], references: [id])
+  statusChangedAt DateTime     @default(now())
+
+  ownerId String
+  owner   User   @relation("ProjectOwner", fields: [ownerId], references: [id])
+
+  assigneeId String?
+  assignee   User?   @relation("ProjectAssignee", fields: [assigneeId], references: [id])
+
+  lastWeeklySummary   String?
+  lastWeeklySummaryAt DateTime?
+
+  tasks         Task[]
+  modules       Module[]
+  documents     Document[]
+  historyEntries HistoryEntry[]
+}
+
+model Module {
+  id        String   @id @default(cuid())
+  name      String
+  color     String   @default("#56684a")
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  tasks Task[]
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @default("")
+  type        TaskType @default(CAMBIO_PENDIENTE)
+  dueDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  assigneeId String?
+  assignee   User?   @relation("TaskAssignee", fields: [assigneeId], references: [id])
+
+  moduleId String?
+  module   Module? @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+
+  historyEntries HistoryEntry[]
+
+  sourceDocumentId String?
+  sourceDocument   Document? @relation(fields: [sourceDocumentId], references: [id], onDelete: SetNull)
+}
+
+model Document {
+  id              String       @id @default(cuid())
+  filename        String
+  fileType        String
+  docType         DocumentType @default(RESUMEN_PROYECTO)
+  rawText         String       @default("")
+  aiExtractedJson String?
+  aiError         String?
+  tasksApplied    Boolean      @default(false)
+  uploadedAt      DateTime     @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  generatedTasks Task[]
+}
+
+model HistoryEntry {
+  id        String   @id @default(cuid())
+  field     String
+  oldValue  String?
+  newValue  String?
+  changedAt DateTime @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  taskId String?
+  task   Task?   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  changedById String?
+  changedBy   User?   @relation(fields: [changedById], references: [id])
+}
+
+model AiUsageLog {
+  id    String @id @default(cuid())
+  day   String @unique
+  count Int    @default(0)
+}

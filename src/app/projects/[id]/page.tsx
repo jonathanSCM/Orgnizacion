@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { timeAgo } from "@/lib/time";
 import Navbar from "@/components/Navbar";
 import ProjectTabs from "./ProjectTabs";
+import CopyProjectAiInfo from "./CopyProjectAiInfo";
 import { HISTORY_PAGE_SIZE } from "./types";
 
 export default async function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
@@ -61,6 +62,9 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                   {project.repoUrl}
                 </a>
               )}
+            </div>
+            <div className="mt-2">
+              <CopyProjectAiInfo projectId={project.id} projectName={project.name} />
             </div>
           </div>
           <div className="flex flex-col items-end gap-1.5">

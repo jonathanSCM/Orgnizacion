@@ -3,10 +3,11 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { logHistory } from "@/lib/history";
+import { resolveActor } from "@/lib/apiAuth";
 
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const actor = await resolveActor(req);
+  if (!actor) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const { id } = await params;
   const project = await prisma.project.findUnique({
@@ -35,8 +36,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 const SIMPLE_TRACKED_FIELDS = ["name", "description", "repoUrl", "deployUrl", "language", "stack"] as const;
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const actor = await resolveActor(req);
+  if (!actor) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const { id } = await params;
   const body = await req.json();
@@ -76,7 +77,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       const oldValue = String((current as Record<string, unknown>)[field] ?? "");
       const newValue = String((updated as Record<string, unknown>)[field] ?? "");
       if (oldValue !== newValue) {
-        await logHistory({ projectId: id, field, oldValue, newValue, changedById: session.user.id });
+        await logHistory({ projectId: id, field, oldValue, newValue, changedById: actor.id });
       }
     }
   }
@@ -87,7 +88,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       field: "estado_proyecto",
       oldValue: current.status.name,
       newValue: newStatus.name,
-      changedById: session.user.id,
+      changedById: actor.id,
     });
   }
 
@@ -97,7 +98,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       field: "encargado",
       oldValue: current.assignee?.name ?? null,
       newValue: newAssigneeName,
-      changedById: session.user.id,
+      changedById: actor.id,
     });
   }
 

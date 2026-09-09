@@ -25,6 +25,7 @@ const FIELD_LABEL: Record<string, string> = {
   fecha_limite_tarea: "Fecha límite de tarea",
   ia_aplico_extraccion: "IA aplicó info del documento",
   tareas_generadas_por_ia: "Tareas generadas por IA",
+  actualizacion: "Actualización",
 };
 
 export default function HistoryTab({

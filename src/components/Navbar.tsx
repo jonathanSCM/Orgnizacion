@@ -8,6 +8,7 @@ import ThemeToggle from "./ThemeToggle";
 const LINKS = [
   { href: "/settings/statuses", label: "Estados" },
   { href: "/settings/team", label: "Equipo" },
+  { href: "/settings/api-token", label: "Token IA" },
 ];
 
 export default function Navbar({ userName }: { userName: string }) {

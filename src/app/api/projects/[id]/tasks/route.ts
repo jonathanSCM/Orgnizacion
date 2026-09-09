@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { logHistory } from "@/lib/history";
 import { parseBody, createTaskSchema } from "@/lib/validation";
+import { resolveActor } from "@/lib/apiAuth";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const actor = await resolveActor(req);
+  if (!actor) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const { id: projectId } = await params;
   const parsed = parseBody(createTaskSchema, await req.json());
@@ -32,7 +31,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     taskId: task.id,
     field: "tarea_creada",
     newValue: task.title,
-    changedById: session.user.id,
+    changedById: actor.id,
   });
 
   return NextResponse.json(task, { status: 201 });

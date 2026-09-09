@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { logHistory } from "@/lib/history";
+import { parseBody, createUpdateNoteSchema } from "@/lib/validation";
+import { resolveActor } from "@/lib/apiAuth";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const actor = await resolveActor(req);
+  if (!actor) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const { id: projectId } = await params;
   const { searchParams } = new URL(req.url);
@@ -21,4 +22,24 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   });
 
   return NextResponse.json(entries);
+}
+
+// Permite dejar una actualización de texto libre en el historial del proyecto
+// (usado por el botón "Añadir actualización" y por el acceso de API personal).
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const actor = await resolveActor(req);
+  if (!actor) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
+  const { id: projectId } = await params;
+  const parsed = parseBody(createUpdateNoteSchema, await req.json());
+  if ("error" in parsed) return parsed.error;
+
+  const entry = await logHistory({
+    projectId,
+    field: "actualizacion",
+    newValue: parsed.data.note,
+    changedById: actor.id,
+  });
+
+  return NextResponse.json(entry, { status: 201 });
 }

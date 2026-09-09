@@ -97,6 +97,10 @@ export const forgotPasswordSchema = z.object({
   email: z.string().trim().email("Email inválido"),
 });
 
+export const createUpdateNoteSchema = z.object({
+  note: z.string().trim().min(1, "La actualización no puede estar vacía").max(2000),
+});
+
 export const resetPasswordSchema = z.object({
   token: z.string().trim().min(1),
   password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres").max(200),

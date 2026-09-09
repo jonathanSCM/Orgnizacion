@@ -3,10 +3,11 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { parseBody, createProjectSchema } from "@/lib/validation";
+import { resolveActor } from "@/lib/apiAuth";
 
 export async function GET(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const actor = await resolveActor(req);
+  if (!actor) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const { searchParams } = new URL(req.url);
   const take = searchParams.get("take") ? Number(searchParams.get("take")) : undefined;

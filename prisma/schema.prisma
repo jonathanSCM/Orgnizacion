@@ -40,6 +40,18 @@ model User {
   historyEntries HistoryEntry[]
   invitationsSent Invitation[]  @relation("InvitedBy")
   passwordResetTokens PasswordResetToken[]
+  apiTokens      ApiToken[]
+}
+
+model ApiToken {
+  id         String    @id @default(cuid())
+  tokenHash  String    @unique
+  tokenLast4 String
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Invitation {

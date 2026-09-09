@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { logHistory } from "@/lib/history";
 import { parseBody, updateTaskSchema } from "@/lib/validation";
+import { resolveActor } from "@/lib/apiAuth";
 
 const TASK_TYPE_LABEL: Record<string, string> = {
   CAMBIO_NECESARIO: "Cambio necesario",
@@ -16,8 +17,8 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string; taskId: string }> }
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const actor = await resolveActor(req);
+  if (!actor) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const { id: projectId, taskId } = await params;
   const parsed = parseBody(updateTaskSchema, await req.json());
@@ -52,7 +53,7 @@ export async function PATCH(
       field: "tipo_tarea",
       oldValue: TASK_TYPE_LABEL[current.type] ?? current.type,
       newValue: TASK_TYPE_LABEL[updated.type] ?? updated.type,
-      changedById: session.user.id,
+      changedById: actor.id,
     });
   }
 
@@ -63,7 +64,7 @@ export async function PATCH(
       field: "encargado_tarea",
       oldValue: current.assignee?.name ?? null,
       newValue: updated.assignee?.name ?? null,
-      changedById: session.user.id,
+      changedById: actor.id,
     });
   }
 
@@ -74,7 +75,7 @@ export async function PATCH(
       field: "modulo_tarea",
       oldValue: current.module?.name ?? null,
       newValue: updated.module?.name ?? null,
-      changedById: session.user.id,
+      changedById: actor.id,
     });
   }
 
@@ -87,7 +88,7 @@ export async function PATCH(
       field: "fecha_limite_tarea",
       oldValue: currentDue,
       newValue: updatedDue,
-      changedById: session.user.id,
+      changedById: actor.id,
     });
   }
 

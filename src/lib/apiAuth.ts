@@ -1,7 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { hashApiToken } from "@/lib/apiToken";
 
 export type Actor = { id: string; name: string; email: string; role: "LEAD" | "MEMBER" };
 
@@ -15,7 +14,7 @@ export async function resolveActor(req: Request): Promise<Actor | null> {
     if (!token) return null;
 
     const apiToken = await prisma.apiToken.findUnique({
-      where: { tokenHash: hashApiToken(token) },
+      where: { token },
       include: { user: true },
     });
     if (!apiToken) return null;

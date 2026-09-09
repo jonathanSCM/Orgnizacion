@@ -10,28 +10,29 @@ export async function GET() {
 
   const token = await prisma.apiToken.findFirst({
     where: { userId: session.user.id },
-    select: { id: true, tokenLast4: true, createdAt: true, lastUsedAt: true },
+    select: { id: true, token: true, createdAt: true, lastUsedAt: true },
   });
 
   return NextResponse.json({ token });
 }
 
 // Genera un token nuevo (y revoca el anterior si existía): solo puede haber
-// un token activo por usuario. El valor en texto plano solo se devuelve acá,
-// una única vez — después solo se guarda su hash.
+// un token activo por usuario. Se guarda en texto plano (igual que las
+// invitaciones y los links de reset de contraseña de este proyecto) para
+// que el usuario pueda volver a copiarlo cuando quiera desde Configuración.
 export async function POST() {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  const { token, tokenHash, tokenLast4 } = generateApiToken();
+  const token = generateApiToken();
 
   await prisma.apiToken.deleteMany({ where: { userId: session.user.id } });
   const created = await prisma.apiToken.create({
-    data: { userId: session.user.id, tokenHash, tokenLast4 },
-    select: { id: true, tokenLast4: true, createdAt: true, lastUsedAt: true },
+    data: { userId: session.user.id, token },
+    select: { id: true, token: true, createdAt: true, lastUsedAt: true },
   });
 
-  return NextResponse.json({ token: created, plainToken: token }, { status: 201 });
+  return NextResponse.json({ token: created }, { status: 201 });
 }
 
 export async function DELETE() {

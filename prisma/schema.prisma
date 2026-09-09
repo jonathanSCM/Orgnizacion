@@ -45,8 +45,7 @@ model User {
 
 model ApiToken {
   id         String    @id @default(cuid())
-  tokenHash  String    @unique
-  tokenLast4 String
+  token      String    @unique
   createdAt  DateTime  @default(now())
   lastUsedAt DateTime?
 

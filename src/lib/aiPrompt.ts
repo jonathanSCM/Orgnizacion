@@ -39,5 +39,7 @@ Endpoints disponibles (todas las respuestas y bodies son JSON; en POST/PATCH man
 
 Importante: cuando crees o actualices una tarea, siempre que puedas deducir a qué módulo pertenece (por el tema del que habla) o quién la va a hacer, mandá "moduleId" y "assigneeId" — no dejes las tareas sin módulo ni sin encargado por defecto. Si no hay un módulo o encargado obvio, está bien dejarlos sin asignar, pero primero revisá los módulos y miembros existentes (puntos 2 y 4) antes de decidir que no aplica.
 
-Antes de actualizar un proyecto, primero pedime el nombre o buscalo en la lista de GET /api/projects para obtener su ID.`;
+Antes de actualizar un proyecto, primero pedime el nombre o buscalo en la lista de GET /api/projects para obtener su ID.
+
+Si en algún momento una llamada devuelve 401 (No autorizado), significa que este token venció, se revocó o se regeneró: avisame y decime que entre a Configuración → Token IA para copiar el token/prompt actualizado y pasártelo de nuevo — no sigas reintentando con el mismo token.`;
 }

@@ -4,10 +4,11 @@ import bcrypt from "bcryptjs";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { parseBody, createUserSchema } from "@/lib/validation";
+import { resolveActor } from "@/lib/apiAuth";
 
-export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+export async function GET(req: Request) {
+  const actor = await resolveActor(req);
+  if (!actor) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const users = await prisma.user.findMany({
     select: { id: true, name: true, email: true, role: true },

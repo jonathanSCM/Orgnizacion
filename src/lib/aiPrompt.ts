@@ -11,28 +11,33 @@ Endpoints disponibles (todas las respuestas y bodies son JSON; en POST/PATCH man
 1. Listar proyectos (para encontrar el ID por nombre):
    GET ${baseUrl}/api/projects
 
-2. Ver el detalle completo de un proyecto (tareas, módulos, historial, estado actual):
+2. Ver el detalle completo de un proyecto (tareas, módulos, historial, estado actual). La respuesta incluye "modules" (id + nombre de cada módulo del proyecto) — usalos para el punto 5 y 6:
    GET ${baseUrl}/api/projects/{projectId}
 
 3. Ver los estados disponibles (para saber qué "statusId" usar):
    GET ${baseUrl}/api/statuses
 
-4. Cambiar el estado del proyecto, la descripción, el link de despliegue, el repo, el lenguaje, el stack o el encargado:
+4. Ver los miembros del equipo (id + nombre de cada uno) — usalos para asignar un encargado en el punto 5 y 6:
+   GET ${baseUrl}/api/users
+
+5. Cambiar el estado del proyecto, la descripción, el link de despliegue, el repo, el lenguaje, el stack o el encargado:
    PATCH ${baseUrl}/api/projects/{projectId}
    body ejemplo: { "statusId": "...", "description": "...", "deployUrl": "...", "repoUrl": "..." }
 
-5. Crear una tarea nueva dentro del proyecto:
+6. Crear una tarea nueva dentro del proyecto:
    POST ${baseUrl}/api/projects/{projectId}/tasks
-   body ejemplo: { "title": "...", "description": "...", "type": "CAMBIO_PENDIENTE" }
+   body ejemplo: { "title": "...", "description": "...", "type": "CAMBIO_PENDIENTE", "moduleId": "...", "assigneeId": "..." }
    (type puede ser: CAMBIO_NECESARIO, CAMBIO_A_REALIZAR, CAMBIO_REALIZADO, CAMBIO_PENDIENTE)
 
-6. Actualizar una tarea existente (por ejemplo, marcarla como realizada):
+7. Actualizar una tarea existente (por ejemplo, marcarla como realizada, o cambiarle el módulo/encargado):
    PATCH ${baseUrl}/api/projects/{projectId}/tasks/{taskId}
-   body ejemplo: { "type": "CAMBIO_REALIZADO" }
+   body ejemplo: { "type": "CAMBIO_REALIZADO", "moduleId": "...", "assigneeId": "..." }
 
-7. Dejar una actualización de texto libre en el historial del proyecto (para contar qué se hizo, qué falta, avances, etc.):
+8. Dejar una actualización de texto libre en el historial del proyecto (para contar qué se hizo, qué falta, avances, etc.):
    POST ${baseUrl}/api/projects/{projectId}/history
    body: { "note": "Se implementó X, falta Y, próximo paso Z" }
+
+Importante: cuando crees o actualices una tarea, siempre que puedas deducir a qué módulo pertenece (por el tema del que habla) o quién la va a hacer, mandá "moduleId" y "assigneeId" — no dejes las tareas sin módulo ni sin encargado por defecto. Si no hay un módulo o encargado obvio, está bien dejarlos sin asignar, pero primero revisá los módulos y miembros existentes (puntos 2 y 4) antes de decidir que no aplica.
 
 Antes de actualizar un proyecto, primero pedime el nombre o buscalo en la lista de GET /api/projects para obtener su ID.`;
 }

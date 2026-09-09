@@ -104,6 +104,7 @@ export default function TasksTab({ project }: { project: ProjectDetail }) {
   const [assigneeId, setAssigneeId] = useState("");
   const [moduleId, setModuleId] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [showDateField, setShowDateField] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [view, setView] = useState<View>("Agrupado");
 
@@ -139,6 +140,7 @@ export default function TasksTab({ project }: { project: ProjectDetail }) {
       setAssigneeId("");
       setModuleId("");
       setDueDate("");
+      setShowDateField(false);
       setShowForm(false);
       router.refresh();
     }
@@ -184,13 +186,24 @@ export default function TasksTab({ project }: { project: ProjectDetail }) {
               placeholder="¿Qué hay que hacer?"
               className="field w-64"
             />
-            <input
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              className="field !w-auto"
-              title="Fecha límite"
-            />
+            {showDateField ? (
+              <input
+                autoFocus
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="field !w-auto"
+                title="Fecha límite"
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowDateField(true)}
+                className="text-xs text-ink-faint hover:text-ink"
+              >
+                + Fecha límite
+              </button>
+            )}
             {modules.length > 0 && (
               <select value={moduleId} onChange={(e) => setModuleId(e.target.value)} className="field !w-auto">
                 <option value="">Sin módulo</option>

@@ -15,7 +15,8 @@ export default async function StatusesPage() {
           Estados personalizados
         </h1>
         <p className="mb-7 text-sm text-ink-soft">
-          Estos son los estados que se muestran como columnas en el tablero de proyectos.
+          Estos son los estados que se muestran como columnas en el tablero de proyectos. Arrastrá el{" "}
+          <span className="text-ink-faint">⠿</span> para cambiar el orden.
         </p>
         <StatusManager initialStatuses={statuses} />
       </main>

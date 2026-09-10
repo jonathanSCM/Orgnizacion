@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Module, Task, UserRef } from "./types";
 import { TASK_TYPE_LABEL, TASK_TYPE_COLOR } from "./types";
 import { useConfirm } from "@/components/ConfirmDialog";
+import TaskComments from "./TaskComments";
 
 export const TYPE_OPTIONS = Object.entries(TASK_TYPE_LABEL) as [Task["type"], string][];
 export const NO_MODULE = "__none__";
@@ -35,6 +36,7 @@ export function TaskRow({
   const confirm = useConfirm();
   const [busy, setBusy] = useState(false);
   const [editingDate, setEditingDate] = useState(false);
+  const [showComments, setShowComments] = useState(false);
 
   const isDone = task.type === "CAMBIO_REALIZADO";
   const typeColor = TASK_TYPE_COLOR[task.type];
@@ -61,14 +63,21 @@ export function TaskRow({
 
   return (
     <li
-      className={`flex items-start justify-between gap-4 border border-line border-l-4 bg-card p-3.5 shadow-[2px_2px_0_var(--line)] transition-opacity ${
+      className={`border border-line border-l-4 bg-card p-3.5 shadow-[2px_2px_0_var(--line)] transition-opacity ${
         isDone ? "opacity-60" : ""
       }`}
       style={{ borderLeftColor: typeColor }}
     >
+      <div className="flex items-start justify-between gap-4">
       <div className="min-w-0 flex-1">
         <p className={`text-sm font-medium text-ink ${isDone ? "line-through" : ""}`}>{task.title}</p>
         {task.description && <p className="mt-1 text-xs text-ink-soft">{task.description}</p>}
+        <button
+          onClick={() => setShowComments((v) => !v)}
+          className="mt-1.5 text-[11px] text-ink-faint hover:text-ink"
+        >
+          💬 {showComments ? "Ocultar comentarios" : "Comentarios"}
+        </button>
       </div>
 
       <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
@@ -147,6 +156,9 @@ export function TaskRow({
           Borrar
         </button>
       </div>
+      </div>
+
+      {showComments && <TaskComments projectId={projectId} taskId={task.id} />}
     </li>
   );
 }

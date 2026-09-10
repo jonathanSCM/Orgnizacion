@@ -37,6 +37,11 @@ Endpoints disponibles (todas las respuestas y bodies son JSON; en POST/PATCH man
    POST ${baseUrl}/api/projects/{projectId}/history
    body: { "note": "Se implementó X, falta Y, próximo paso Z" }
 
+9. Comentar en una tarea puntual (queda en el hilo de comentarios de esa tarea, no en el historial general — usalo para detalles, dudas o contexto específico de esa tarea en particular; si le asignaste la tarea a alguien, esa persona recibe una notificación del comentario):
+   GET ${baseUrl}/api/projects/{projectId}/tasks/{taskId}/comments  (para leer los comentarios existentes antes de responder)
+   POST ${baseUrl}/api/projects/{projectId}/tasks/{taskId}/comments
+   body: { "body": "El comentario acá" }
+
 Importante: cuando crees o actualices una tarea, siempre que puedas deducir a qué módulo pertenece (por el tema del que habla) o quién la va a hacer, mandá "moduleId" y "assigneeId" — no dejes las tareas sin módulo ni sin encargado por defecto. Si no hay un módulo o encargado obvio, está bien dejarlos sin asignar, pero primero revisá los módulos y miembros existentes (puntos 2 y 4) antes de decidir que no aplica.
 
 Antes de actualizar un proyecto, primero pedime el nombre o buscalo en la lista de GET /api/projects para obtener su ID.

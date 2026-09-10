@@ -4,8 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import ThemeToggle from "./ThemeToggle";
+import NotificationBell from "./NotificationBell";
 
 const LINKS = [
+  { href: "/my-tasks", label: "Mis tareas" },
   { href: "/settings/statuses", label: "Estados" },
   { href: "/settings/team", label: "Equipo" },
   { href: "/settings/api-token", label: "Token IA" },
@@ -43,6 +45,7 @@ export default function Navbar({ userName }: { userName: string }) {
           </div>
         </div>
         <div className="flex items-center gap-4">
+          <NotificationBell />
           <ThemeToggle />
           <button
             onClick={() => window.dispatchEvent(new Event("open-command-palette"))}

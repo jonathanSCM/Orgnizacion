@@ -8,6 +8,7 @@ export type Module = { id: string; name: string; color: string; order: number };
 
 export type Task = {
   id: string;
+  projectId: string;
   title: string;
   description: string;
   type: "CAMBIO_NECESARIO" | "CAMBIO_A_REALIZAR" | "CAMBIO_REALIZADO" | "CAMBIO_PENDIENTE";

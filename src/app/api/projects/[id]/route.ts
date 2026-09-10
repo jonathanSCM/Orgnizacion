@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { logHistory } from "@/lib/history";
 import { resolveActor } from "@/lib/apiAuth";
+import { notifyIfOther } from "@/lib/notify";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const actor = await resolveActor(req);
@@ -99,6 +100,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       oldValue: current.assignee?.name ?? null,
       newValue: newAssigneeName,
       changedById: actor.id,
+    });
+    await notifyIfOther(updated.assigneeId, actor.id, {
+      type: "project_assigned",
+      message: `${actor.name} te asignó como encargado del proyecto "${updated.name}"`,
+      link: `/projects/${id}`,
     });
   }
 

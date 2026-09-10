@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { logHistory } from "@/lib/history";
 import { parseBody, createTaskSchema } from "@/lib/validation";
 import { resolveActor } from "@/lib/apiAuth";
+import { notifyIfOther } from "@/lib/notify";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const actor = await resolveActor(req);
@@ -12,6 +13,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const parsed = parseBody(createTaskSchema, await req.json());
   if ("error" in parsed) return parsed.error;
   const body = parsed.data;
+
+  const project = await prisma.project.findUnique({ where: { id: projectId }, select: { name: true } });
+  if (!project) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
 
   const task = await prisma.task.create({
     data: {
@@ -32,6 +36,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     field: "tarea_creada",
     newValue: task.title,
     changedById: actor.id,
+  });
+
+  await notifyIfOther(task.assigneeId, actor.id, {
+    type: "task_assigned",
+    message: `${actor.name} te asignó la tarea "${task.title}" en ${project.name}`,
+    link: `/projects/${projectId}?task=${task.id}`,
   });
 
   return NextResponse.json(task, { status: 201 });

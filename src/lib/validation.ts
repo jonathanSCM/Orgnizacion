@@ -97,6 +97,10 @@ export const forgotPasswordSchema = z.object({
   email: z.string().trim().email("Email inválido"),
 });
 
+export const createCommentSchema = z.object({
+  body: z.string().trim().min(1, "El comentario no puede estar vacío").max(2000),
+});
+
 export const createUpdateNoteSchema = z.object({
   note: z.string().trim().min(1, "La actualización no puede estar vacía").max(2000),
 });

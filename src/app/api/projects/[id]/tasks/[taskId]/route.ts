@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { logHistory } from "@/lib/history";
 import { parseBody, updateTaskSchema } from "@/lib/validation";
 import { resolveActor } from "@/lib/apiAuth";
+import { notifyIfOther } from "@/lib/notify";
 
 const TASK_TYPE_LABEL: Record<string, string> = {
   CAMBIO_NECESARIO: "Cambio necesario",
@@ -27,7 +28,7 @@ export async function PATCH(
 
   const current = await prisma.task.findUnique({
     where: { id: taskId },
-    include: { assignee: true, module: true },
+    include: { assignee: true, module: true, project: { select: { name: true } } },
   });
   if (!current) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
 
@@ -65,6 +66,11 @@ export async function PATCH(
       oldValue: current.assignee?.name ?? null,
       newValue: updated.assignee?.name ?? null,
       changedById: actor.id,
+    });
+    await notifyIfOther(updated.assigneeId, actor.id, {
+      type: "task_assigned",
+      message: `${actor.name} te asignó la tarea "${updated.title}" en ${current.project.name}`,
+      link: `/projects/${projectId}?task=${taskId}`,
     });
   }
 

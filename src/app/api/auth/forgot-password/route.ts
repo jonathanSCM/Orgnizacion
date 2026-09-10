@@ -3,6 +3,7 @@ import { randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { parseBody, forgotPasswordSchema } from "@/lib/validation";
 import { sendEmail, resetPasswordEmailHtml } from "@/lib/mailer";
+import { getBaseUrl } from "@/lib/baseUrl";
 
 const GENERIC_MESSAGE = "Si ese email existe en el sistema, te llegará un correo para restablecer tu contraseña.";
 
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
       },
     });
 
-    const resetUrl = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/reset-password/${token}`;
+    const resetUrl = `${getBaseUrl()}/reset-password/${token}`;
     await sendEmail({
       to: user.email,
       subject: "Restablecé tu contraseña",

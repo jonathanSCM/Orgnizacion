@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { parseBody, inviteSchema } from "@/lib/validation";
 import { sendEmail, inviteEmailHtml } from "@/lib/mailer";
+import { getBaseUrl } from "@/lib/baseUrl";
 
 const EXPIRATION_DAYS = 7;
 
@@ -51,7 +52,7 @@ export async function POST(req: Request) {
     },
   });
 
-  const acceptUrl = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/invite/${token}`;
+  const acceptUrl = `${getBaseUrl()}/invite/${token}`;
   await sendEmail({
     to: email,
     subject: "Te invitaron al Panel de Organización",

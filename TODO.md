@@ -49,6 +49,24 @@ Ideas recopiladas investigando herramientas similares (Plane, Huly, Vikunja, Foc
 - [x] Dockerfile + guía de despliegue en Coolify (`DEPLOY.md`) — Postgres en producción, SQLite en local
 - [x] Registro del primer admin (`/register`, solo disponible con 0 usuarios) + gestión de roles desde `/settings/team`
 
+### Colaboración / IA (post-lanzamiento)
+- [x] Notificaciones in-app (campanita) + "Mis tareas" cross-proyecto + comentarios en tareas
+- [x] Prioridad de tarea separada del tipo, feed de actividad global en el dashboard, acciones en lote, checklist por tarea
+- [x] Token de API personal para que un asistente de IA (Claude Code u otro) lea/actualice proyectos en nombre del usuario
+- [x] Notificaciones a Discord por proyecto (webhook saliente, con @mención al encargado si tiene su Discord ID cargado)
+- [ ] Bot de Discord para actualizar tareas desde el chat (pausado a propósito, después del webhook)
+
+### Ideas nuevas (investigado 2026-09-10, sin empezar)
+- [ ] Resaltar tareas vencidas (dueDate pasada y no completada) con borde/badge rojo — esfuerzo bajo, alto impacto visual
+- [ ] Ampliar el Command Palette (Cmd/Ctrl+K) para que busque también por título de tarea, no solo proyectos
+- [ ] Exportar a CSV (tareas o historial de un proyecto)
+- [ ] Dependencias entre tareas ("bloquea" / "depende de")
+- [ ] Digest semanal por email (tus tareas de la semana, lo que venció, lo que te asignaron) — reusando Resend
+- [ ] Filtros guardados en la pestaña Tareas (por encargado/prioridad/módulo, sin pasar por la selección en lote)
+- [ ] 2FA de login
+- [ ] Página de auditoría completa para LEAD (historial de todos los proyectos, filtrable) — separado del feed resumido del dashboard
+- [ ] Ver/cerrar sesiones activas de la cuenta
+
 ## Notas
 
 - Sin Ciclos/Sprints — decisión del usuario, no está en el radar.

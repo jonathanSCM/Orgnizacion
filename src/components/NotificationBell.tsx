@@ -67,7 +67,10 @@ export default function NotificationBell() {
         className="relative flex h-8 w-8 items-center justify-center border border-line-strong bg-card text-ink-soft transition-colors hover:border-rust hover:text-ink"
         title="Notificaciones"
       >
-        🔔
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4">
+          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
         {unreadCount > 0 && (
           <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rust px-1 text-[10px] font-semibold text-card">
             {unreadCount > 9 ? "9+" : unreadCount}

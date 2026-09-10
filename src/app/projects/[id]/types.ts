@@ -48,6 +48,7 @@ export type ProjectDetail = {
   description: string;
   repoUrl: string | null;
   deployUrl: string | null;
+  discordWebhookUrl: string | null;
   language: string | null;
   stack: string;
   statusId: string;

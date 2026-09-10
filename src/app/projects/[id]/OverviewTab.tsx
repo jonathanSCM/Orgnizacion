@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ProjectDetail, StatusOption, UserRef } from "./types";
 import GithubInfoCard from "./GithubInfoCard";
+import DiscordWebhookSection from "./DiscordWebhookSection";
 import { useConfirm } from "@/components/ConfirmDialog";
 
 export default function OverviewTab({
@@ -194,6 +195,10 @@ export default function OverviewTab({
         <button onClick={deleteProject} className="text-sm text-ink-faint hover:text-rust">
           Borrar proyecto
         </button>
+      </div>
+
+      <div className="border-t border-line pt-5">
+        <DiscordWebhookSection projectId={project.id} initialWebhookUrl={project.discordWebhookUrl} />
       </div>
 
       <p className="text-xs text-ink-faint">

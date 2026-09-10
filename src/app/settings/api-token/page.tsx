@@ -1,6 +1,7 @@
 import { requireSession } from "@/lib/session";
 import Navbar from "@/components/Navbar";
 import ApiTokenManager from "./ApiTokenManager";
+import DiscordProfileSection from "./DiscordProfileSection";
 
 export default async function ApiTokenPage() {
   const session = await requireSession();
@@ -18,6 +19,7 @@ export default async function ApiTokenPage() {
           hecho por vos.
         </p>
         <ApiTokenManager userName={session.user.name ?? session.user.email ?? ""} />
+        <DiscordProfileSection />
       </main>
     </div>
   );

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { parseBody, createCommentSchema } from "@/lib/validation";
 import { resolveActor } from "@/lib/apiAuth";
 import { notifyIfOther } from "@/lib/notify";
+import { notifyDiscord, resolveDiscordMention, DISCORD_COLOR } from "@/lib/discord";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string; taskId: string }> }) {
   const actor = await resolveActor(req);
@@ -28,7 +29,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   const task = await prisma.task.findUnique({
     where: { id: taskId },
-    select: { title: true, assigneeId: true, project: { select: { name: true } } },
+    select: { title: true, assigneeId: true, project: { select: { name: true, assigneeId: true } } },
   });
   if (!task) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
 
@@ -41,6 +42,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     type: "task_comment",
     message: `${actor.name} comentó en "${task.title}" (${task.project.name})`,
     link: `/projects/${projectId}?task=${taskId}`,
+  });
+
+  const mentionUserId = await resolveDiscordMention(task.assigneeId, task.project.assigneeId);
+  await notifyDiscord(projectId, {
+    title: `💬 Comentario en ${task.project.name}`,
+    description: `**${actor.name}** comentó en «${task.title}»: ${comment.body}`,
+    color: DISCORD_COLOR.comment,
+    mentionUserId,
   });
 
   return NextResponse.json(comment, { status: 201 });

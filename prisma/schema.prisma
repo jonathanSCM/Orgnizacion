@@ -39,6 +39,7 @@ model User {
   role         Role     @default(MEMBER)
   failedLoginAttempts Int       @default(0)
   lockedUntil         DateTime?
+  discordUserId String?
   createdAt    DateTime @default(now())
 
   projects       Project[]      @relation("ProjectOwner")
@@ -138,6 +139,7 @@ model Project {
   description String   @default("")
   repoUrl     String?
   deployUrl   String?
+  discordWebhookUrl String?
   language    String?
   stack       String   @default("[]") // JSON string array
   createdAt   DateTime @default(now())

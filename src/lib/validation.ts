@@ -121,3 +121,21 @@ export const resetPasswordSchema = z.object({
   token: z.string().trim().min(1),
   password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres").max(200),
 });
+
+export const updateDiscordWebhookSchema = z.object({
+  discordWebhookUrl: z
+    .string()
+    .trim()
+    .regex(/^https:\/\/discord(app)?\.com\/api\/webhooks\/.+/, "Tiene que ser una URL de webhook de Discord")
+    .nullish()
+    .or(z.literal("")),
+});
+
+export const updateOwnProfileSchema = z.object({
+  discordUserId: z
+    .string()
+    .trim()
+    .regex(/^\d{17,20}$/, "Tiene que ser el ID numérico de Discord (17 a 20 dígitos)")
+    .nullish()
+    .or(z.literal("")),
+});

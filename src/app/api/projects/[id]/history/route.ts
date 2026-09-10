@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { logHistory } from "@/lib/history";
 import { parseBody, createUpdateNoteSchema } from "@/lib/validation";
 import { resolveActor } from "@/lib/apiAuth";
+import { notifyDiscord, resolveDiscordMention, DISCORD_COLOR } from "@/lib/discord";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const actor = await resolveActor(req);
@@ -40,6 +41,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     newValue: parsed.data.note,
     changedById: actor.id,
   });
+
+  const project = await prisma.project.findUnique({ where: { id: projectId }, select: { name: true, assigneeId: true } });
+  if (project) {
+    const mentionUserId = await resolveDiscordMention(project.assigneeId);
+    await notifyDiscord(projectId, {
+      title: `📝 ${project.name}`,
+      description: `**${actor.name}**: ${parsed.data.note}`,
+      color: DISCORD_COLOR.status,
+      mentionUserId,
+    });
+  }
 
   return NextResponse.json(entry, { status: 201 });
 }

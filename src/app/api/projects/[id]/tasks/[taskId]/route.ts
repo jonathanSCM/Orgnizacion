@@ -6,6 +6,7 @@ import { logHistory } from "@/lib/history";
 import { parseBody, updateTaskSchema } from "@/lib/validation";
 import { resolveActor } from "@/lib/apiAuth";
 import { notifyIfOther } from "@/lib/notify";
+import { notifyDiscord, resolveDiscordMention, DISCORD_COLOR } from "@/lib/discord";
 
 const TASK_TYPE_LABEL: Record<string, string> = {
   CAMBIO_NECESARIO: "Cambio necesario",
@@ -35,7 +36,7 @@ export async function PATCH(
 
   const current = await prisma.task.findUnique({
     where: { id: taskId },
-    include: { assignee: true, module: true, project: { select: { name: true } } },
+    include: { assignee: true, module: true, project: { select: { name: true, assigneeId: true } } },
   });
   if (!current) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
 
@@ -63,6 +64,16 @@ export async function PATCH(
       newValue: TASK_TYPE_LABEL[updated.type] ?? updated.type,
       changedById: actor.id,
     });
+
+    if (updated.type === "CAMBIO_REALIZADO" && current.type !== "CAMBIO_REALIZADO") {
+      const mentionUserId = await resolveDiscordMention(current.project.assigneeId);
+      await notifyDiscord(projectId, {
+        title: `✅ Tarea completada en ${current.project.name}`,
+        description: `**${actor.name}** completó «${updated.title}»`,
+        color: DISCORD_COLOR.done,
+        mentionUserId,
+      });
+    }
   }
 
   if (body.priority && body.priority !== current.priority) {
@@ -90,6 +101,16 @@ export async function PATCH(
       message: `${actor.name} te asignó la tarea "${updated.title}" en ${current.project.name}`,
       link: `/projects/${projectId}?task=${taskId}`,
     });
+
+    if (updated.assigneeId) {
+      const mentionUserId = await resolveDiscordMention(updated.assigneeId);
+      await notifyDiscord(projectId, {
+        title: `👤 Encargado asignado en ${current.project.name}`,
+        description: `**${actor.name}** asignó «${updated.title}» a ${updated.assignee?.name ?? "alguien"}`,
+        color: DISCORD_COLOR.assigned,
+        mentionUserId,
+      });
+    }
   }
 
   if ("moduleId" in body && body.moduleId !== current.moduleId) {

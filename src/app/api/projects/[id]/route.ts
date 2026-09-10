@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { logHistory } from "@/lib/history";
 import { resolveActor } from "@/lib/apiAuth";
 import { notifyIfOther } from "@/lib/notify";
+import { notifyDiscord, resolveDiscordMention, DISCORD_COLOR } from "@/lib/discord";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const actor = await resolveActor(req);
@@ -91,6 +92,14 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       newValue: newStatus.name,
       changedById: actor.id,
     });
+
+    const mentionUserId = await resolveDiscordMention(current.assigneeId);
+    await notifyDiscord(id, {
+      title: `📌 ${updated.name}`,
+      description: `El proyecto pasó de «${current.status.name}» a «${newStatus.name}»`,
+      color: DISCORD_COLOR.status,
+      mentionUserId,
+    });
   }
 
   if (newAssigneeName !== undefined) {
@@ -106,6 +115,16 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       message: `${actor.name} te asignó como encargado del proyecto "${updated.name}"`,
       link: `/projects/${id}`,
     });
+
+    if (updated.assigneeId) {
+      const mentionUserId = await resolveDiscordMention(updated.assigneeId);
+      await notifyDiscord(id, {
+        title: `👤 ${updated.name}`,
+        description: `**${actor.name}** asignó el proyecto a ${updated.assignee?.name ?? "alguien"}`,
+        color: DISCORD_COLOR.assigned,
+        mentionUserId,
+      });
+    }
   }
 
   return NextResponse.json(updated);

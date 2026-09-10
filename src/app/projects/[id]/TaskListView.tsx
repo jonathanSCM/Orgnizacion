@@ -5,20 +5,25 @@ import type { Module, Task, UserRef } from "./types";
 import { TASK_TYPE_LABEL } from "./types";
 import { TaskRow } from "./TaskRow";
 
-type SortField = "title" | "type" | "module" | "assignee" | "dueDate";
+type SortField = "title" | "priority" | "type" | "module" | "assignee" | "dueDate";
 
 const COLUMNS: { field: SortField; label: string }[] = [
   { field: "title", label: "Título" },
+  { field: "priority", label: "Prioridad" },
   { field: "type", label: "Tipo" },
   { field: "module", label: "Módulo" },
   { field: "assignee", label: "Encargado" },
   { field: "dueDate", label: "Fecha límite" },
 ];
 
+const PRIORITY_ORDER: Record<Task["priority"], number> = { URGENTE: 0, ALTA: 1, MEDIA: 2, BAJA: 3 };
+
 function sortValue(task: Task, field: SortField): string {
   switch (field) {
     case "title":
       return task.title.toLowerCase();
+    case "priority":
+      return String(PRIORITY_ORDER[task.priority]);
     case "type":
       return TASK_TYPE_LABEL[task.type];
     case "module":
@@ -35,11 +40,15 @@ export default function TaskListView({
   projectId,
   members,
   modules,
+  selectedIds,
+  onToggleSelect,
 }: {
   tasks: Task[];
   projectId: string;
   members: UserRef[];
   modules: Module[];
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
 }) {
   const [sortField, setSortField] = useState<SortField>("dueDate");
   const [sortDir, setSortDir] = useState<1 | -1>(1);
@@ -76,7 +85,15 @@ export default function TaskListView({
       </div>
       <ul className="space-y-2.5">
         {sorted.map((task) => (
-          <TaskRow key={task.id} task={task} projectId={projectId} members={members} modules={modules} />
+          <TaskRow
+            key={task.id}
+            task={task}
+            projectId={projectId}
+            members={members}
+            modules={modules}
+            selected={selectedIds?.has(task.id)}
+            onToggleSelect={onToggleSelect}
+          />
         ))}
       </ul>
     </div>

@@ -11,6 +11,7 @@ export function parseBody<T>(schema: z.ZodType<T>, raw: unknown): { data: T } | 
 }
 
 const taskType = z.enum(["CAMBIO_NECESARIO", "CAMBIO_A_REALIZAR", "CAMBIO_REALIZADO", "CAMBIO_PENDIENTE"]);
+const taskPriority = z.enum(["URGENTE", "ALTA", "MEDIA", "BAJA"]);
 
 const optionalUrl = z
   .string()
@@ -36,6 +37,7 @@ export const createTaskSchema = z.object({
   title: z.string().trim().min(1, "Título requerido").max(300),
   description: z.string().trim().max(5000).optional(),
   type: taskType.optional(),
+  priority: taskPriority.optional(),
   assigneeId: z.string().trim().min(1).optional(),
   moduleId: z.string().trim().min(1).optional(),
   dueDate: optionalDate,
@@ -45,9 +47,19 @@ export const updateTaskSchema = z.object({
   title: z.string().trim().min(1, "Título requerido").max(300).optional(),
   description: z.string().trim().max(5000).optional(),
   type: taskType.optional(),
+  priority: taskPriority.optional(),
   assigneeId: z.string().nullable().optional(),
   moduleId: z.string().nullable().optional(),
   dueDate: z.string().nullable().optional(),
+});
+
+export const createChecklistItemSchema = z.object({
+  text: z.string().trim().min(1, "El ítem no puede estar vacío").max(300),
+});
+
+export const updateChecklistItemSchema = z.object({
+  text: z.string().trim().min(1, "El ítem no puede estar vacío").max(300).optional(),
+  done: z.boolean().optional(),
 });
 
 export const createModuleSchema = z.object({

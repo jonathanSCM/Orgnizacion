@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Module, Task, UserRef } from "./types";
-import { TASK_TYPE_LABEL, TASK_TYPE_COLOR } from "./types";
+import { TASK_TYPE_LABEL, TASK_TYPE_COLOR, TASK_PRIORITY_LABEL, TASK_PRIORITY_FLAG } from "./types";
 import { useConfirm } from "@/components/ConfirmDialog";
 import TaskComments from "./TaskComments";
+import TaskChecklist from "./TaskChecklist";
 
 export const TYPE_OPTIONS = Object.entries(TASK_TYPE_LABEL) as [Task["type"], string][];
+export const PRIORITY_OPTIONS = Object.entries(TASK_PRIORITY_LABEL) as [Task["priority"], string][];
 export const NO_MODULE = "__none__";
 
 function toDateInputValue(value: string | Date | null): string {
@@ -26,17 +28,22 @@ export function TaskRow({
   projectId,
   members,
   modules,
+  selected,
+  onToggleSelect,
 }: {
   task: Task;
   projectId: string;
   members: UserRef[];
   modules: Module[];
+  selected?: boolean;
+  onToggleSelect?: (id: string) => void;
 }) {
   const router = useRouter();
   const confirm = useConfirm();
   const [busy, setBusy] = useState(false);
   const [editingDate, setEditingDate] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [showChecklist, setShowChecklist] = useState(false);
 
   const isDone = task.type === "CAMBIO_REALIZADO";
   const typeColor = TASK_TYPE_COLOR[task.type];
@@ -69,96 +76,132 @@ export function TaskRow({
       style={{ borderLeftColor: typeColor }}
     >
       <div className="flex items-start justify-between gap-4">
-      <div className="min-w-0 flex-1">
-        <p className={`text-sm font-medium text-ink ${isDone ? "line-through" : ""}`}>{task.title}</p>
-        {task.description && <p className="mt-1 text-xs text-ink-soft">{task.description}</p>}
-        <button
-          onClick={() => setShowComments((v) => !v)}
-          className="mt-1.5 text-[11px] text-ink-faint hover:text-ink"
-        >
-          💬 {showComments ? "Ocultar comentarios" : "Comentarios"}
-        </button>
-      </div>
-
-      <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
-        {showDateInput ? (
+        {onToggleSelect && (
           <input
-            type="date"
-            autoFocus={editingDate && !task.dueDate}
-            value={toDateInputValue(task.dueDate)}
-            disabled={busy}
-            onChange={(e) => patch({ dueDate: e.target.value || null })}
-            onBlur={() => setEditingDate(false)}
-            className="field !w-auto py-1 text-xs"
-            title="Fecha límite"
+            type="checkbox"
+            checked={!!selected}
+            onChange={() => onToggleSelect(task.id)}
+            className="mt-1 h-4 w-4 shrink-0 accent-rust"
           />
-        ) : (
-          <button
-            onClick={() => setEditingDate(true)}
-            className="text-xs text-ink-faint hover:text-ink"
-            title="Agregar fecha límite"
-          >
-            + Fecha
-          </button>
         )}
-        {task.dueDate && !editingDate && (
-          <span className="text-[11px] text-ink-faint">{formatDueDate(task.dueDate)}</span>
-        )}
+        <div className="min-w-0 flex-1">
+          <p className={`text-sm font-medium text-ink ${isDone ? "line-through" : ""}`}>
+            <span className="mr-1" title={`Prioridad: ${TASK_PRIORITY_LABEL[task.priority]}`}>
+              {TASK_PRIORITY_FLAG[task.priority]}
+            </span>
+            {task.title}
+          </p>
+          {task.description && <p className="mt-1 text-xs text-ink-soft">{task.description}</p>}
+          <div className="mt-1.5 flex gap-3">
+            <button
+              onClick={() => setShowComments((v) => !v)}
+              className="text-[11px] text-ink-faint hover:text-ink"
+            >
+              💬 {showComments ? "Ocultar comentarios" : "Comentarios"}
+            </button>
+            <button
+              onClick={() => setShowChecklist((v) => !v)}
+              className="text-[11px] text-ink-faint hover:text-ink"
+            >
+              ☑️ {showChecklist ? "Ocultar checklist" : "Checklist"}
+            </button>
+          </div>
+        </div>
 
-        <select
-          value={task.type}
-          disabled={busy}
-          onChange={(e) => patch({ type: e.target.value })}
-          className="border !w-auto bg-card px-2 py-1 text-xs font-semibold"
-          style={{ color: typeColor, borderColor: typeColor }}
-        >
-          {TYPE_OPTIONS.map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
-
-        <div className="flex items-center gap-1.5">
-          {selectedModule && (
-            <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: selectedModule.color }} />
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          {showDateInput ? (
+            <input
+              type="date"
+              autoFocus={editingDate && !task.dueDate}
+              value={toDateInputValue(task.dueDate)}
+              disabled={busy}
+              onChange={(e) => patch({ dueDate: e.target.value || null })}
+              onBlur={() => setEditingDate(false)}
+              className="field !w-auto py-1 text-xs"
+              title="Fecha límite"
+            />
+          ) : (
+            <button
+              onClick={() => setEditingDate(true)}
+              className="text-xs text-ink-faint hover:text-ink"
+              title="Agregar fecha límite"
+            >
+              + Fecha
+            </button>
           )}
+          {task.dueDate && !editingDate && (
+            <span className="text-[11px] text-ink-faint">{formatDueDate(task.dueDate)}</span>
+          )}
+
           <select
-            value={task.moduleId ?? NO_MODULE}
+            value={task.priority}
             disabled={busy}
-            onChange={(e) => patch({ moduleId: e.target.value === NO_MODULE ? null : e.target.value })}
+            onChange={(e) => patch({ priority: e.target.value })}
             className="field !w-auto py-1 text-xs"
+            title="Prioridad"
           >
-            <option value={NO_MODULE}>Sin módulo</option>
-            {modules.map((m) => (
+            {PRIORITY_OPTIONS.map(([value, label]) => (
+              <option key={value} value={value}>
+                {TASK_PRIORITY_FLAG[value]} {label}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={task.type}
+            disabled={busy}
+            onChange={(e) => patch({ type: e.target.value })}
+            className="border !w-auto bg-card px-2 py-1 text-xs font-semibold"
+            style={{ color: typeColor, borderColor: typeColor }}
+          >
+            {TYPE_OPTIONS.map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+
+          <div className="flex items-center gap-1.5">
+            {selectedModule && (
+              <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: selectedModule.color }} />
+            )}
+            <select
+              value={task.moduleId ?? NO_MODULE}
+              disabled={busy}
+              onChange={(e) => patch({ moduleId: e.target.value === NO_MODULE ? null : e.target.value })}
+              className="field !w-auto py-1 text-xs"
+            >
+              <option value={NO_MODULE}>Sin módulo</option>
+              {modules.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <select
+            value={task.assigneeId ?? ""}
+            disabled={busy}
+            onChange={(e) => patch({ assigneeId: e.target.value || null })}
+            className={`field !w-auto py-1 text-xs ${task.assigneeId ? "font-semibold text-ink" : ""}`}
+          >
+            <option value="">Sin encargado</option>
+            {members.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.name}
               </option>
             ))}
           </select>
+
+          <button onClick={remove} className="text-xs text-ink-faint hover:text-rust">
+            Borrar
+          </button>
         </div>
-
-        <select
-          value={task.assigneeId ?? ""}
-          disabled={busy}
-          onChange={(e) => patch({ assigneeId: e.target.value || null })}
-          className={`field !w-auto py-1 text-xs ${task.assigneeId ? "font-semibold text-ink" : ""}`}
-        >
-          <option value="">Sin encargado</option>
-          {members.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.name}
-            </option>
-          ))}
-        </select>
-
-        <button onClick={remove} className="text-xs text-ink-faint hover:text-rust">
-          Borrar
-        </button>
-      </div>
       </div>
 
       {showComments && <TaskComments projectId={projectId} taskId={task.id} />}
+      {showChecklist && <TaskChecklist projectId={projectId} taskId={task.id} />}
     </li>
   );
 }

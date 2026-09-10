@@ -3,30 +3,7 @@
 import { useState } from "react";
 import type { HistoryEntry } from "./types";
 import { timeAgo } from "@/lib/time";
-
-const FIELD_LABEL: Record<string, string> = {
-  name: "Nombre",
-  description: "Descripción",
-  repoUrl: "Repositorio",
-  deployUrl: "Link de despliegue",
-  language: "Lenguaje",
-  stack: "Stack",
-  estado_proyecto: "Estado del proyecto",
-  encargado: "Encargado del proyecto",
-  tipo_tarea: "Tipo de tarea",
-  encargado_tarea: "Encargado de tarea",
-  modulo_tarea: "Módulo de tarea",
-  modulo_creado: "Módulo creado",
-  modulo_borrado: "Módulo borrado",
-  tarea_creada: "Tarea creada",
-  documento_subido: "Documento subido",
-  documento_borrado: "Documento borrado",
-  pregunta_ia: "Pregunta a la IA",
-  fecha_limite_tarea: "Fecha límite de tarea",
-  ia_aplico_extraccion: "IA aplicó info del documento",
-  tareas_generadas_por_ia: "Tareas generadas por IA",
-  actualizacion: "Actualización",
-};
+import { FIELD_LABEL } from "@/lib/historyLabels";
 
 export default function HistoryTab({
   projectId,

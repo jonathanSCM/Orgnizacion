@@ -3,13 +3,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Module, ProjectDetail, Task, UserRef } from "./types";
-import { TaskRow } from "./TaskRow";
+import { TASK_PRIORITY_FLAG } from "./types";
+import { TaskRow, TYPE_OPTIONS, PRIORITY_OPTIONS, NO_MODULE } from "./TaskRow";
 import TaskListView from "./TaskListView";
 import TaskCalendarView from "./TaskCalendarView";
 import { useConfirm } from "@/components/ConfirmDialog";
 
 const VIEWS = ["Agrupado", "Lista", "Calendario"] as const;
 type View = (typeof VIEWS)[number];
+const NO_ASSIGNEE = "__no_assignee__";
 
 function ModulesManager({
   projectId,
@@ -103,10 +105,13 @@ export default function TasksTab({ project }: { project: ProjectDetail }) {
   const [title, setTitle] = useState("");
   const [assigneeId, setAssigneeId] = useState("");
   const [moduleId, setModuleId] = useState("");
+  const [priority, setPriority] = useState<Task["priority"]>("MEDIA");
   const [dueDate, setDueDate] = useState("");
   const [showDateField, setShowDateField] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [view, setView] = useState<View>("Agrupado");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const confirm = useConfirm();
 
   useEffect(() => {
     setTasks(project.tasks);
@@ -130,6 +135,7 @@ export default function TasksTab({ project }: { project: ProjectDetail }) {
         title,
         assigneeId: assigneeId || undefined,
         moduleId: moduleId || undefined,
+        priority,
         dueDate: dueDate || undefined,
       }),
     });
@@ -139,11 +145,43 @@ export default function TasksTab({ project }: { project: ProjectDetail }) {
       setTitle("");
       setAssigneeId("");
       setModuleId("");
+      setPriority("MEDIA");
       setDueDate("");
       setShowDateField(false);
       setShowForm(false);
       router.refresh();
     }
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  async function bulkPatch(data: Record<string, unknown>) {
+    await Promise.all(
+      [...selectedIds].map((id) =>
+        fetch(`/api/projects/${project.id}/tasks/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        })
+      )
+    );
+    router.refresh();
+  }
+
+  async function bulkDelete() {
+    if (!(await confirm(`¿Borrar las ${selectedIds.size} tareas seleccionadas?`))) return;
+    await Promise.all(
+      [...selectedIds].map((id) => fetch(`/api/projects/${project.id}/tasks/${id}`, { method: "DELETE" }))
+    );
+    setSelectedIds(new Set());
+    router.refresh();
   }
 
   const groups = useMemo(() => {
@@ -222,6 +260,17 @@ export default function TasksTab({ project }: { project: ProjectDetail }) {
                 </option>
               ))}
             </select>
+            <select
+              value={priority}
+              onChange={(e) => setPriority(e.target.value as Task["priority"])}
+              className="field !w-auto"
+            >
+              {PRIORITY_OPTIONS.map(([value, label]) => (
+                <option key={value} value={value}>
+                  {TASK_PRIORITY_FLAG[value]} {label}
+                </option>
+              ))}
+            </select>
             <button type="submit" className="btn-primary">
               Añadir
             </button>
@@ -250,12 +299,97 @@ export default function TasksTab({ project }: { project: ProjectDetail }) {
         </div>
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-3 border border-line-strong bg-paper px-3.5 py-2.5">
+          <span className="text-xs font-semibold text-ink">{selectedIds.size} seleccionada(s)</span>
+          <select
+            defaultValue=""
+            onChange={(e) => {
+              if (e.target.value) bulkPatch({ type: e.target.value });
+              e.target.value = "";
+            }}
+            className="field !w-auto py-1 text-xs"
+          >
+            <option value="">Cambiar tipo...</option>
+            {TYPE_OPTIONS.map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+          <select
+            defaultValue=""
+            onChange={(e) => {
+              if (e.target.value) bulkPatch({ priority: e.target.value });
+              e.target.value = "";
+            }}
+            className="field !w-auto py-1 text-xs"
+          >
+            <option value="">Cambiar prioridad...</option>
+            {PRIORITY_OPTIONS.map(([value, label]) => (
+              <option key={value} value={value}>
+                {TASK_PRIORITY_FLAG[value]} {label}
+              </option>
+            ))}
+          </select>
+          {modules.length > 0 && (
+            <select
+              defaultValue=""
+              onChange={(e) => {
+                if (!e.target.value) return;
+                bulkPatch({ moduleId: e.target.value === NO_MODULE ? null : e.target.value });
+                e.target.value = "";
+              }}
+              className="field !w-auto py-1 text-xs"
+            >
+              <option value="">Cambiar módulo...</option>
+              <option value={NO_MODULE}>Sin módulo</option>
+              {modules.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+            </select>
+          )}
+          <select
+            defaultValue=""
+            onChange={(e) => {
+              if (!e.target.value) return;
+              bulkPatch({ assigneeId: e.target.value === NO_ASSIGNEE ? null : e.target.value });
+              e.target.value = "";
+            }}
+            className="field !w-auto py-1 text-xs"
+          >
+            <option value="">Cambiar encargado...</option>
+            <option value={NO_ASSIGNEE}>Sin encargado</option>
+            {members.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name}
+              </option>
+            ))}
+          </select>
+          <button onClick={bulkDelete} className="text-xs text-ink-faint hover:text-rust">
+            Borrar seleccionadas
+          </button>
+          <button onClick={() => setSelectedIds(new Set())} className="ml-auto text-xs text-ink-faint hover:text-ink">
+            Cancelar selección
+          </button>
+        </div>
+      )}
+
       {tasks.length === 0 ? (
         <p className="border border-dashed border-line-strong p-6 text-center text-sm text-ink-soft">
           Todavía no hay tareas registradas en este proyecto.
         </p>
       ) : view === "Lista" ? (
-        <TaskListView tasks={tasks} projectId={project.id} members={members} modules={modules} />
+        <TaskListView
+          tasks={tasks}
+          projectId={project.id}
+          members={members}
+          modules={modules}
+          selectedIds={selectedIds}
+          onToggleSelect={toggleSelect}
+        />
       ) : view === "Calendario" ? (
         <TaskCalendarView tasks={tasks} projectId={project.id} members={members} modules={modules} />
       ) : (
@@ -270,7 +404,15 @@ export default function TasksTab({ project }: { project: ProjectDetail }) {
               {moduleTasks.length > 0 ? (
                 <ul className="space-y-2.5">
                   {moduleTasks.map((task) => (
-                    <TaskRow key={task.id} task={task} projectId={project.id} members={members} modules={modules} />
+                    <TaskRow
+                      key={task.id}
+                      task={task}
+                      projectId={project.id}
+                      members={members}
+                      modules={modules}
+                      selected={selectedIds.has(task.id)}
+                      onToggleSelect={toggleSelect}
+                    />
                   ))}
                 </ul>
               ) : (
@@ -286,7 +428,15 @@ export default function TasksTab({ project }: { project: ProjectDetail }) {
               )}
               <ul className="space-y-2.5">
                 {groups.noModule.map((task) => (
-                  <TaskRow key={task.id} task={task} projectId={project.id} members={members} modules={modules} />
+                  <TaskRow
+                    key={task.id}
+                    task={task}
+                    projectId={project.id}
+                    members={members}
+                    modules={modules}
+                    selected={selectedIds.has(task.id)}
+                    onToggleSelect={toggleSelect}
+                  />
                 ))}
               </ul>
             </div>

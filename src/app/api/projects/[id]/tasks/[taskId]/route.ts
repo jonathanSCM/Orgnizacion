@@ -14,6 +14,13 @@ const TASK_TYPE_LABEL: Record<string, string> = {
   CAMBIO_PENDIENTE: "Cambio pendiente",
 };
 
+const TASK_PRIORITY_LABEL: Record<string, string> = {
+  URGENTE: "Urgente",
+  ALTA: "Alta",
+  MEDIA: "Media",
+  BAJA: "Baja",
+};
+
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string; taskId: string }> }
@@ -34,7 +41,7 @@ export async function PATCH(
 
   const data: Record<string, unknown> = {};
   const raw = body as Record<string, unknown>;
-  for (const field of ["title", "description", "type"]) {
+  for (const field of ["title", "description", "type", "priority"]) {
     if (field in raw) data[field] = raw[field];
   }
   if ("assigneeId" in body) data.assigneeId = body.assigneeId || null;
@@ -54,6 +61,17 @@ export async function PATCH(
       field: "tipo_tarea",
       oldValue: TASK_TYPE_LABEL[current.type] ?? current.type,
       newValue: TASK_TYPE_LABEL[updated.type] ?? updated.type,
+      changedById: actor.id,
+    });
+  }
+
+  if (body.priority && body.priority !== current.priority) {
+    await logHistory({
+      projectId,
+      taskId,
+      field: "prioridad_tarea",
+      oldValue: TASK_PRIORITY_LABEL[current.priority] ?? current.priority,
+      newValue: TASK_PRIORITY_LABEL[updated.priority] ?? updated.priority,
       changedById: actor.id,
     });
   }

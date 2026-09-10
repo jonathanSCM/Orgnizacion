@@ -23,6 +23,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       title: body.title,
       description: body.description || "",
       type: body.type || "CAMBIO_PENDIENTE",
+      priority: body.priority || "MEDIA",
       assigneeId: body.assigneeId || null,
       moduleId: body.moduleId || null,
       dueDate: body.dueDate ? new Date(body.dueDate) : null,

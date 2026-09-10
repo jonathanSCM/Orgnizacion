@@ -12,6 +12,7 @@ export type Task = {
   title: string;
   description: string;
   type: "CAMBIO_NECESARIO" | "CAMBIO_A_REALIZAR" | "CAMBIO_REALIZADO" | "CAMBIO_PENDIENTE";
+  priority: "URGENTE" | "ALTA" | "MEDIA" | "BAJA";
   assigneeId: string | null;
   assignee: UserRef | null;
   moduleId: string | null;
@@ -76,3 +77,26 @@ export const TASK_TYPE_COLOR: Record<Task["type"], string> = {
   CAMBIO_REALIZADO: "#56684a",
   CAMBIO_PENDIENTE: "#9a8f7a",
 };
+
+export const TASK_PRIORITY_LABEL: Record<Task["priority"], string> = {
+  URGENTE: "Urgente",
+  ALTA: "Alta",
+  MEDIA: "Media",
+  BAJA: "Baja",
+};
+
+export const TASK_PRIORITY_COLOR: Record<Task["priority"], string> = {
+  URGENTE: "#b8461c",
+  ALTA: "#c17a2e",
+  MEDIA: "#9a8f7a",
+  BAJA: "#6b7d8f",
+};
+
+export const TASK_PRIORITY_FLAG: Record<Task["priority"], string> = {
+  URGENTE: "🔴",
+  ALTA: "🟠",
+  MEDIA: "🟡",
+  BAJA: "⚪",
+};
+
+export type ChecklistItem = { id: string; text: string; done: boolean; order: number };

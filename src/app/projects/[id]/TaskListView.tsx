@@ -53,12 +53,15 @@ export default function TaskListView({
   const [sortField, setSortField] = useState<SortField>("dueDate");
   const [sortDir, setSortDir] = useState<1 | -1>(1);
 
-  const sorted = useMemo(() => {
-    return [...tasks].sort((a, b) => {
+  const { pending, done } = useMemo(() => {
+    const sortFn = (a: Task, b: Task) => {
       const av = sortValue(a, sortField);
       const bv = sortValue(b, sortField);
       return av < bv ? -1 * sortDir : av > bv ? 1 * sortDir : 0;
-    });
+    };
+    const pending = tasks.filter((t) => t.type !== "CAMBIO_REALIZADO").sort(sortFn);
+    const done = tasks.filter((t) => t.type === "CAMBIO_REALIZADO").sort(sortFn);
+    return { pending, done };
   }, [tasks, sortField, sortDir]);
 
   function toggleSort(field: SortField) {
@@ -84,7 +87,7 @@ export default function TaskListView({
         ))}
       </div>
       <ul className="space-y-2.5">
-        {sorted.map((task) => (
+        {pending.map((task) => (
           <TaskRow
             key={task.id}
             task={task}
@@ -96,6 +99,26 @@ export default function TaskListView({
           />
         ))}
       </ul>
+      {done.length > 0 && (
+        <div className="mt-4">
+          <h4 className="mb-2 px-3.5 text-xs font-semibold uppercase tracking-wide text-ink-faint">
+            Completadas ({done.length})
+          </h4>
+          <ul className="space-y-2.5">
+            {done.map((task) => (
+              <TaskRow
+                key={task.id}
+                task={task}
+                projectId={projectId}
+                members={members}
+                modules={modules}
+                selected={selectedIds?.has(task.id)}
+                onToggleSelect={onToggleSelect}
+              />
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

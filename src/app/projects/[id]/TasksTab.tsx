@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Module, ProjectDetail, Task, UserRef } from "./types";
-import { TASK_PRIORITY_FLAG } from "./types";
 import { TaskRow, TYPE_OPTIONS, PRIORITY_OPTIONS, NO_MODULE } from "./TaskRow";
 import TaskListView from "./TaskListView";
 import TaskCalendarView from "./TaskCalendarView";
@@ -94,6 +93,67 @@ function ModulesManager({
         </div>
       )}
     </div>
+  );
+}
+
+function splitDone(tasks: Task[]) {
+  const pending = tasks.filter((t) => t.type !== "CAMBIO_REALIZADO");
+  const done = tasks.filter((t) => t.type === "CAMBIO_REALIZADO");
+  return { pending, done };
+}
+
+function TaskGroupList({
+  tasks,
+  projectId,
+  members,
+  modules,
+  selectedIds,
+  onToggleSelect,
+}: {
+  tasks: Task[];
+  projectId: string;
+  members: UserRef[];
+  modules: Module[];
+  selectedIds: Set<string>;
+  onToggleSelect: (id: string) => void;
+}) {
+  const { pending, done } = splitDone(tasks);
+  return (
+    <>
+      <ul className="space-y-2.5">
+        {pending.map((task) => (
+          <TaskRow
+            key={task.id}
+            task={task}
+            projectId={projectId}
+            members={members}
+            modules={modules}
+            selected={selectedIds.has(task.id)}
+            onToggleSelect={onToggleSelect}
+          />
+        ))}
+      </ul>
+      {done.length > 0 && (
+        <div className="mt-3">
+          <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-faint">
+            Completadas ({done.length})
+          </h4>
+          <ul className="space-y-2.5">
+            {done.map((task) => (
+              <TaskRow
+                key={task.id}
+                task={task}
+                projectId={projectId}
+                members={members}
+                modules={modules}
+                selected={selectedIds.has(task.id)}
+                onToggleSelect={onToggleSelect}
+              />
+            ))}
+          </ul>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -267,7 +327,7 @@ export default function TasksTab({ project }: { project: ProjectDetail }) {
             >
               {PRIORITY_OPTIONS.map(([value, label]) => (
                 <option key={value} value={value}>
-                  {TASK_PRIORITY_FLAG[value]} {label}
+                  {label}
                 </option>
               ))}
             </select>
@@ -328,7 +388,7 @@ export default function TasksTab({ project }: { project: ProjectDetail }) {
             <option value="">Cambiar prioridad...</option>
             {PRIORITY_OPTIONS.map(([value, label]) => (
               <option key={value} value={value}>
-                {TASK_PRIORITY_FLAG[value]} {label}
+                {label}
               </option>
             ))}
           </select>
@@ -402,19 +462,14 @@ export default function TasksTab({ project }: { project: ProjectDetail }) {
                 <span className="text-xs text-ink-faint">{moduleTasks.length}</span>
               </div>
               {moduleTasks.length > 0 ? (
-                <ul className="space-y-2.5">
-                  {moduleTasks.map((task) => (
-                    <TaskRow
-                      key={task.id}
-                      task={task}
-                      projectId={project.id}
-                      members={members}
-                      modules={modules}
-                      selected={selectedIds.has(task.id)}
-                      onToggleSelect={toggleSelect}
-                    />
-                  ))}
-                </ul>
+                <TaskGroupList
+                  tasks={moduleTasks}
+                  projectId={project.id}
+                  members={members}
+                  modules={modules}
+                  selectedIds={selectedIds}
+                  onToggleSelect={toggleSelect}
+                />
               ) : (
                 <p className="text-xs text-ink-faint">Sin tareas todavía.</p>
               )}
@@ -426,19 +481,14 @@ export default function TasksTab({ project }: { project: ProjectDetail }) {
               {modules.length > 0 && (
                 <h3 className="mb-2 font-display text-sm font-semibold text-ink-soft">Sin módulo</h3>
               )}
-              <ul className="space-y-2.5">
-                {groups.noModule.map((task) => (
-                  <TaskRow
-                    key={task.id}
-                    task={task}
-                    projectId={project.id}
-                    members={members}
-                    modules={modules}
-                    selected={selectedIds.has(task.id)}
-                    onToggleSelect={toggleSelect}
-                  />
-                ))}
-              </ul>
+              <TaskGroupList
+                tasks={groups.noModule}
+                projectId={project.id}
+                members={members}
+                modules={modules}
+                selectedIds={selectedIds}
+                onToggleSelect={toggleSelect}
+              />
             </div>
           )}
         </div>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Module, Task, UserRef } from "./types";
-import { TASK_TYPE_LABEL, TASK_TYPE_COLOR, TASK_PRIORITY_LABEL, TASK_PRIORITY_FLAG } from "./types";
+import { TASK_TYPE_LABEL, TASK_TYPE_COLOR, TASK_PRIORITY_LABEL, TASK_PRIORITY_COLOR } from "./types";
 import { useConfirm } from "@/components/ConfirmDialog";
 import TaskComments from "./TaskComments";
 import TaskChecklist from "./TaskChecklist";
@@ -47,6 +47,7 @@ export function TaskRow({
 
   const isDone = task.type === "CAMBIO_REALIZADO";
   const typeColor = TASK_TYPE_COLOR[task.type];
+  const priorityColor = TASK_PRIORITY_COLOR[task.priority];
   const selectedModule = modules.find((m) => m.id === task.moduleId) ?? null;
 
   async function patch(body: Record<string, unknown>) {
@@ -70,10 +71,10 @@ export function TaskRow({
 
   return (
     <li
-      className={`border border-line border-l-4 bg-card p-3.5 shadow-[2px_2px_0_var(--line)] transition-opacity ${
-        isDone ? "opacity-60" : ""
+      className={`border bg-card p-3.5 shadow-[2px_2px_0_var(--line)] transition-colors ${
+        isDone ? "border-line" : "border-line border-l-4"
       }`}
-      style={{ borderLeftColor: typeColor }}
+      style={isDone ? undefined : { borderLeftColor: typeColor }}
     >
       <div className="flex items-start justify-between gap-4">
         {onToggleSelect && (
@@ -85,25 +86,33 @@ export function TaskRow({
           />
         )}
         <div className="min-w-0 flex-1">
-          <p className={`text-sm font-medium text-ink ${isDone ? "line-through" : ""}`}>
-            <span className="mr-1" title={`Prioridad: ${TASK_PRIORITY_LABEL[task.priority]}`}>
-              {TASK_PRIORITY_FLAG[task.priority]}
-            </span>
+          <p className={`flex items-start gap-2 text-sm font-medium ${isDone ? "text-ink-faint line-through" : "text-ink"}`}>
+            {isDone ? (
+              <span className="mt-0.5 shrink-0 text-moss" title="Completada">
+                ✓
+              </span>
+            ) : (
+              <span
+                className="mt-1.5 h-2 w-2 shrink-0 rounded-full"
+                style={{ backgroundColor: priorityColor }}
+                title={`Prioridad: ${TASK_PRIORITY_LABEL[task.priority]}`}
+              />
+            )}
             {task.title}
           </p>
           {task.description && <p className="mt-1 text-xs text-ink-soft">{task.description}</p>}
           <div className="mt-1.5 flex gap-3">
             <button
               onClick={() => setShowComments((v) => !v)}
-              className="text-[11px] text-ink-faint hover:text-ink"
+              className="text-[11px] text-ink-faint underline decoration-line-strong underline-offset-2 hover:text-ink"
             >
-              💬 {showComments ? "Ocultar comentarios" : "Comentarios"}
+              {showComments ? "Ocultar comentarios" : "Comentarios"}
             </button>
             <button
               onClick={() => setShowChecklist((v) => !v)}
-              className="text-[11px] text-ink-faint hover:text-ink"
+              className="text-[11px] text-ink-faint underline decoration-line-strong underline-offset-2 hover:text-ink"
             >
-              ☑️ {showChecklist ? "Ocultar checklist" : "Checklist"}
+              {showChecklist ? "Ocultar checklist" : "Checklist"}
             </button>
           </div>
         </div>
@@ -142,7 +151,7 @@ export function TaskRow({
           >
             {PRIORITY_OPTIONS.map(([value, label]) => (
               <option key={value} value={value}>
-                {TASK_PRIORITY_FLAG[value]} {label}
+                {label}
               </option>
             ))}
           </select>
@@ -151,7 +160,7 @@ export function TaskRow({
             value={task.type}
             disabled={busy}
             onChange={(e) => patch({ type: e.target.value })}
-            className="border !w-auto bg-card px-2 py-1 text-xs font-semibold"
+            className="field !w-auto py-1 text-xs font-semibold"
             style={{ color: typeColor, borderColor: typeColor }}
           >
             {TYPE_OPTIONS.map(([value, label]) => (

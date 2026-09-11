@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { parseBody, createProjectSchema } from "@/lib/validation";
 import { resolveActor } from "@/lib/apiAuth";
+import { syncToBoss } from "@/lib/bossSync";
 
 export async function GET(req: Request) {
   const actor = await resolveActor(req);
@@ -47,6 +48,16 @@ export async function POST(req: Request) {
       statusId: firstStatus.id,
       ownerId: session.user.id,
     },
+  });
+
+  await syncToBoss("project", "upsert", {
+    id: project.id,
+    name: project.name,
+    description: project.description,
+    repoUrl: project.repoUrl,
+    deployUrl: project.deployUrl,
+    statusId: project.statusId,
+    assigneeName: null,
   });
 
   return NextResponse.json(project, { status: 201 });

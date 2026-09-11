@@ -6,6 +6,7 @@ import { logHistory } from "@/lib/history";
 import { resolveActor } from "@/lib/apiAuth";
 import { notifyIfOther } from "@/lib/notify";
 import { notifyDiscord, resolveDiscordMention, DISCORD_COLOR } from "@/lib/discord";
+import { syncToBoss } from "@/lib/bossSync";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const actor = await resolveActor(req);
@@ -74,6 +75,16 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const updated = await prisma.project.update({ where: { id }, data, include: { status: true, assignee: true } });
 
+  await syncToBoss("project", "upsert", {
+    id: updated.id,
+    name: updated.name,
+    description: updated.description,
+    repoUrl: updated.repoUrl,
+    deployUrl: updated.deployUrl,
+    statusId: updated.statusId,
+    assigneeName: updated.assignee?.name ?? null,
+  });
+
   for (const field of SIMPLE_TRACKED_FIELDS) {
     if (field in body) {
       const oldValue = String((current as Record<string, unknown>)[field] ?? "");
@@ -136,5 +147,6 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
 
   const { id } = await params;
   await prisma.project.delete({ where: { id } });
+  await syncToBoss("project", "delete", { id });
   return NextResponse.json({ ok: true });
 }

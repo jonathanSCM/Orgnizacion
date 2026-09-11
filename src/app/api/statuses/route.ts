@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { parseBody, createStatusSchema } from "@/lib/validation";
+import { syncToBoss } from "@/lib/bossSync";
 
 export async function GET() {
   const statuses = await prisma.statusOption.findMany({ orderBy: { order: "asc" } });
@@ -26,6 +27,8 @@ export async function POST(req: Request) {
       order: (maxOrder._max.order ?? -1) + 1,
     },
   });
+
+  await syncToBoss("status", "upsert", status);
 
   return NextResponse.json(status, { status: 201 });
 }

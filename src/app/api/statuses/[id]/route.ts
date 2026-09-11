@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { parseBody, updateStatusSchema } from "@/lib/validation";
+import { syncToBoss } from "@/lib/bossSync";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions);
@@ -21,6 +22,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       order: body.order,
     },
   });
+
+  await syncToBoss("status", "upsert", status);
 
   return NextResponse.json(status);
 }
@@ -41,5 +44,6 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   }
 
   await prisma.statusOption.delete({ where: { id } });
+  await syncToBoss("status", "delete", { id });
   return NextResponse.json({ ok: true });
 }

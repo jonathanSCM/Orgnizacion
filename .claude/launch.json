@@ -5,7 +5,15 @@
       "name": "panel-organizacion",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "port": 3000
+      "port": 3000,
+      "autoPort": true
+    },
+    {
+      "name": "panel-jefe",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "../Organizacion-Jefe", "run", "dev"],
+      "port": 3000,
+      "autoPort": true
     }
   ]
 }

@@ -5,6 +5,7 @@ import { parseBody, createTaskSchema } from "@/lib/validation";
 import { resolveActor } from "@/lib/apiAuth";
 import { notifyIfOther } from "@/lib/notify";
 import { notifyDiscord, resolveDiscordMention, DISCORD_COLOR } from "@/lib/discord";
+import { syncToBoss } from "@/lib/bossSync";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const actor = await resolveActor(req);
@@ -47,6 +48,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     type: "task_assigned",
     message: `${actor.name} te asignó la tarea "${task.title}" en ${project.name}`,
     link: `/projects/${projectId}?task=${task.id}`,
+  });
+
+  await syncToBoss("task", "upsert", {
+    id: task.id,
+    projectId: task.projectId,
+    title: task.title,
+    description: task.description,
+    type: task.type,
+    priority: task.priority,
+    dueDate: task.dueDate ? task.dueDate.toISOString() : null,
+    assigneeName: task.assignee?.name ?? null,
+    moduleName: task.module?.name ?? null,
   });
 
   const mentionUserId = await resolveDiscordMention(task.assigneeId);

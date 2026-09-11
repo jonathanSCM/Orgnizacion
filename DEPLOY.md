@@ -29,6 +29,8 @@ En la sección **Environment Variables** de la aplicación en Coolify, cargá:
 | `GEMINI_DAILY_LIMIT` | `200` | Opcional (tope de solicitudes de IA por día, protección de abuso) |
 | `RESEND_API_KEY` | tu API key de Resend | Opcional, pero sin esto no se pueden mandar invitaciones ni recuperar contraseña por email |
 | `MAIL_FROM` | `Panel de Organización <noreply@tu-dominio-verificado.com>` | Solo funciona con un dominio verificado en tu cuenta de Resend |
+| `BOSS_PANEL_URL` | `https://jefe.tu-dominio.com` | Opcional — URL pública del Panel del Jefe (app separada, ver su propio DEPLOY.md). Sin esto no se sincroniza nada, no rompe nada acá |
+| `BOSS_PANEL_SYNC_TOKEN` | el mismo valor que `SYNC_TOKEN` en el Panel del Jefe | Opcional, va junto con `BOSS_PANEL_URL` |
 
 No hace falta configurar `PORT` — el contenedor ya escucha en `3000` (Coolify lo detecta con el puerto expuesto del paso 2).
 

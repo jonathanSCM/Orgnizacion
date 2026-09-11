@@ -7,6 +7,7 @@ import { parseBody, updateTaskSchema } from "@/lib/validation";
 import { resolveActor } from "@/lib/apiAuth";
 import { notifyIfOther } from "@/lib/notify";
 import { notifyDiscord, resolveDiscordMention, DISCORD_COLOR } from "@/lib/discord";
+import { syncToBoss } from "@/lib/bossSync";
 
 const TASK_TYPE_LABEL: Record<string, string> = {
   CAMBIO_NECESARIO: "Cambio necesario",
@@ -53,6 +54,18 @@ export async function PATCH(
     where: { id: taskId },
     data,
     include: { assignee: { select: { id: true, name: true } }, module: true },
+  });
+
+  await syncToBoss("task", "upsert", {
+    id: updated.id,
+    projectId,
+    title: updated.title,
+    description: updated.description,
+    type: updated.type,
+    priority: updated.priority,
+    dueDate: updated.dueDate ? updated.dueDate.toISOString() : null,
+    assigneeName: updated.assignee?.name ?? null,
+    moduleName: updated.module?.name ?? null,
   });
 
   if (body.type && body.type !== current.type) {
@@ -149,5 +162,6 @@ export async function DELETE(
 
   const { taskId } = await params;
   await prisma.task.delete({ where: { id: taskId } });
+  await syncToBoss("task", "delete", { id: taskId });
   return NextResponse.json({ ok: true });
 }
